@@ -1,0 +1,62 @@
+# Build directories
+build/
+cmake-build-*/
+out/
+
+# CMake generated files
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.cmake
+!cmake/*.cmake
+!CMakeLists.txt
+
+# Compiled objects
+*.o
+*.obj
+*.a
+*.lib
+*.so
+*.so.*
+*.dylib
+*.dll
+*.exe
+
+# Generated files
+compile_commands.json
+.cache/
+
+# IDE and editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Interop tests
+interop-tests/node_modules/
+interop-tests/build/
+interop-tests/test_vectors_js.json
+interop-tests/test_vectors_cpp.json
+interop-tests/pnpm-lock.yaml
+
+# Benchmark outputs
+interop-tests/benchmark_results_*.json
+interop-tests/benchmark_comparison.json
+**/benchmark_results_*.json
+
+# Test output
+Testing/
+CTestTestfile.cmake
+
+# Coverage
+*.gcov
+*.gcda
+*.gcno
+coverage/
+
+# Debug
+*.dSYM/
