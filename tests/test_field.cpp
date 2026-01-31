@@ -39,26 +39,26 @@ TEST_F(FpTest, Construction) {
 
     // From uint64_t
     Fp from_uint(uint64_t{42});
-    EXPECT_EQ(from_uint.value(), 42);
+    EXPECT_EQ(from_uint.value(), uint256{42});
 
-    // From mpz_class
-    Fp from_mpz(mpz_class("12345678901234567890"));
-    EXPECT_EQ(from_mpz.value(), mpz_class("12345678901234567890"));
+    // From uint256
+    Fp from_u256(uint256("12345678901234567890"));
+    EXPECT_EQ(from_u256.value(), uint256("12345678901234567890"));
 
     // From hex string
     Fp from_hex("0x10");
-    EXPECT_EQ(from_hex.value(), 16);
+    EXPECT_EQ(from_hex.value(), uint256{16});
 
     // From hex string without prefix
     Fp from_hex_no_prefix("FF");
-    EXPECT_EQ(from_hex_no_prefix.value(), 255);
+    EXPECT_EQ(from_hex_no_prefix.value(), uint256{255});
 }
 
 TEST_F(FpTest, Reduction) {
     // Value larger than p should be reduced
-    mpz_class large_value = Fp::P + 100;
+    uint256 large_value = Fp::P + uint256{100};
     Fp reduced(large_value);
-    EXPECT_EQ(reduced.value(), 100);
+    EXPECT_EQ(reduced.value(), uint256{100});
 
     // Value equal to p should become 0
     Fp at_p(Fp::P);
@@ -72,7 +72,7 @@ TEST_F(FpTest, Addition) {
     EXPECT_EQ(one + two, three);
 
     // Addition with reduction
-    Fp almost_p(Fp::P - 1);
+    Fp almost_p(Fp::P - uint256::one());
     Fp result = almost_p + one;
     EXPECT_TRUE(result.is_zero());
 }
@@ -81,11 +81,11 @@ TEST_F(FpTest, Subtraction) {
     EXPECT_EQ(one - zero, one);
     EXPECT_EQ(one - one, zero);
     EXPECT_EQ(three - one, two);
-    EXPECT_EQ(two - three, Fp(Fp::P - 1));
+    EXPECT_EQ(two - three, Fp(Fp::P - uint256::one()));
 
     // Subtraction with wrap-around
     Fp result = zero - one;
-    EXPECT_EQ(result.value(), Fp::P - 1);
+    EXPECT_EQ(result.value(), Fp::P - uint256::one());
 }
 
 TEST_F(FpTest, Multiplication) {
@@ -131,7 +131,7 @@ TEST_F(FpTest, Power) {
 
     // Fermat's little theorem: a^(p-1) = 1 for a != 0
     Fp a(uint64_t{7});
-    EXPECT_EQ(a.pow(Fp::P - 1), one);
+    EXPECT_EQ(a.pow(Fp::P - uint256::one()), one);
 }
 
 TEST_F(FpTest, Square) {
@@ -163,7 +163,7 @@ TEST_F(FpTest, Serialization) {
     EXPECT_EQ(original, deserialized);
 
     // Test with large value
-    Fp large(Fp::P - 1);
+    Fp large(Fp::P - uint256::one());
     auto large_bytes = large.to_bytes();
     Fp large_back = Fp::from_bytes(large_bytes);
     EXPECT_EQ(large, large_back);
@@ -185,8 +185,7 @@ TEST_F(FpTest, Random) {
     // Generate multiple random values and check they're in range
     for (int i = 0; i < 100; ++i) {
         Fp random_val = Fp::random();
-        EXPECT_GE(random_val.value(), 0);
-        EXPECT_LT(random_val.value(), Fp::P);
+        EXPECT_FALSE(random_val.value() >= Fp::P);
     }
 
     // Statistical test: random values should not all be the same

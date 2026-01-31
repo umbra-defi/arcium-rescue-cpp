@@ -60,3 +60,9 @@ coverage/
 
 # Debug
 *.dSYM/
+
+# pnpm
+.pnpm-store/
+**/.pnpm-store/
+**/node_modules/
+pnpm-lock.yaml

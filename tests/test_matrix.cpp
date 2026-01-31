@@ -174,7 +174,7 @@ TEST_F(MatrixTest, ScalarMul) {
 TEST_F(MatrixTest, Determinant) {
     // det([[1, 2], [3, 4]]) = 1*4 - 2*3 = -2 = p - 2
     Fp det = test_2x2.det();
-    EXPECT_EQ(det, Fp(Fp::P - 2));
+    EXPECT_EQ(det, Fp(Fp::P - uint256{2}));
 
     // det(I) = 1
     EXPECT_EQ(identity_2x2.det(), Fp::ONE);
@@ -223,8 +223,7 @@ TEST_F(MatrixTest, Random) {
     // Check values are in range
     for (size_t i = 0; i < 3; ++i) {
         for (size_t j = 0; j < 4; ++j) {
-            EXPECT_GE(random_mat(i, j).value(), 0);
-            EXPECT_LT(random_mat(i, j).value(), Fp::P);
+            EXPECT_FALSE(random_mat(i, j).value() >= Fp::P);
         }
     }
 }

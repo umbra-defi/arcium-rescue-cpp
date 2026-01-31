@@ -5,7 +5,7 @@
  * @brief Utility functions for serialization, random generation, and SHAKE256.
  */
 
-#include <rescue/field.hpp>
+#include <rescue/uint256.hpp>
 
 #include <array>
 #include <cstddef>
@@ -15,29 +15,30 @@
 #include <string_view>
 #include <vector>
 
-#include <gmpxx.h>
-
 namespace rescue {
+
+// Forward declaration
+class Fp;
 
 // ============================================================================
 // Serialization utilities
 // ============================================================================
 
 /**
- * @brief Serialize a bigint to little-endian bytes.
+ * @brief Serialize a uint256 to little-endian bytes.
  * @param value The value to serialize.
  * @param length_in_bytes The desired output length.
  * @return Byte array of the specified length.
  * @throws std::overflow_error if value is too large for the specified length.
  */
-[[nodiscard]] std::vector<uint8_t> serialize_le(const mpz_class& value, size_t length_in_bytes);
+[[nodiscard]] std::vector<uint8_t> serialize_le(const uint256& value, size_t length_in_bytes);
 
 /**
- * @brief Deserialize little-endian bytes to a bigint.
+ * @brief Deserialize little-endian bytes to a uint256.
  * @param bytes The bytes to deserialize.
- * @return The deserialized bigint.
+ * @return The deserialized uint256.
  */
-[[nodiscard]] mpz_class deserialize_le(std::span<const uint8_t> bytes);
+[[nodiscard]] uint256 deserialize_le(std::span<const uint8_t> bytes);
 
 // ============================================================================
 // Random generation
@@ -64,11 +65,11 @@ template <size_t N>
 }
 
 /**
- * @brief Generate a random field element uniformly in [0, bound).
+ * @brief Generate a random uint256 uniformly in [0, bound).
  * @param bound The exclusive upper bound.
  * @return Random value in [0, bound).
  */
-[[nodiscard]] mpz_class random_field_elem(const mpz_class& bound);
+[[nodiscard]] uint256 random_field_elem(const uint256& bound);
 
 // ============================================================================
 // SHAKE256 Extendable Output Function (XOF)

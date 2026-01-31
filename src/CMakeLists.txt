@@ -1,8 +1,8 @@
 # Source files for the rescue library
 
 add_library(rescue
+    uint256.cpp
     field.cpp
-    constant_time.cpp
     matrix.cpp
     utils.cpp
     rescue_desc.cpp
@@ -22,11 +22,8 @@ target_include_directories(rescue
         ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-# Link dependencies
+# Link dependencies (OpenSSL only - no GMP!)
 target_link_libraries(rescue
-    PUBLIC
-        GMP::GMP
-        GMP::GMPXX
     PRIVATE
         OpenSSL::Crypto
 )

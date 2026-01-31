@@ -165,7 +165,7 @@ private:
     /**
      * @brief Generate counter values for CTR mode.
      */
-    [[nodiscard]] std::vector<Fp> generate_counter(const mpz_class& nonce, size_t n_blocks) const;
+    [[nodiscard]] std::vector<Fp> generate_counter(const uint256& nonce, size_t n_blocks) const;
 
     /**
      * @brief Encrypt/decrypt a single block.

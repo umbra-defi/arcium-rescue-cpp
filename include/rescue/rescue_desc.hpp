@@ -117,12 +117,12 @@ public:
     /**
      * @brief Get alpha (S-box exponent).
      */
-    [[nodiscard]] const mpz_class& alpha() const { return alpha_; }
+    [[nodiscard]] const uint256& alpha() const { return alpha_; }
 
     /**
      * @brief Get alpha inverse.
      */
-    [[nodiscard]] const mpz_class& alpha_inverse() const { return alpha_inverse_; }
+    [[nodiscard]] const uint256& alpha_inverse() const { return alpha_inverse_; }
 
     /**
      * @brief Get number of rounds.
@@ -164,8 +164,8 @@ private:
     RescueMode mode_;
     size_t m_;
 
-    mpz_class alpha_;
-    mpz_class alpha_inverse_;
+    uint256 alpha_;
+    uint256 alpha_inverse_;
     size_t n_rounds_;
 
     Matrix mds_mat_;
@@ -205,7 +205,7 @@ private:
  * @param p The field modulus.
  * @return Pair of (alpha, alpha_inverse).
  */
-[[nodiscard]] std::pair<mpz_class, mpz_class> get_alpha_and_inverse(const mpz_class& p);
+[[nodiscard]] std::pair<uint256, uint256> get_alpha_and_inverse(const uint256& p);
 
 /**
  * @brief Calculate the number of rounds needed for security.
@@ -214,7 +214,7 @@ private:
  * @param m The state size.
  * @return Number of rounds.
  */
-[[nodiscard]] size_t get_n_rounds(const RescueMode& mode, const mpz_class& alpha, size_t m);
+[[nodiscard]] size_t get_n_rounds(const RescueMode& mode, const uint256& alpha, size_t m);
 
 /**
  * @brief Build a Cauchy MDS matrix.
@@ -241,8 +241,8 @@ private:
  * @return Vector of all intermediate states.
  */
 [[nodiscard]] std::vector<Matrix> rescue_permutation(const RescueMode& mode,
-                                                     const mpz_class& alpha,
-                                                     const mpz_class& alpha_inverse,
+                                                     const uint256& alpha,
+                                                     const uint256& alpha_inverse,
                                                      const Matrix& mds_mat,
                                                      const std::vector<Matrix>& subkeys,
                                                      const Matrix& state);
@@ -258,8 +258,8 @@ private:
  * @return Vector of all intermediate states.
  */
 [[nodiscard]] std::vector<Matrix> rescue_permutation_inverse(const RescueMode& mode,
-                                                              const mpz_class& alpha,
-                                                              const mpz_class& alpha_inverse,
+                                                              const uint256& alpha,
+                                                              const uint256& alpha_inverse,
                                                               const Matrix& mds_mat_inverse,
                                                               const std::vector<Matrix>& subkeys,
                                                               const Matrix& state);

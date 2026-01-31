@@ -30,7 +30,6 @@ endfunction()
 
 # Add test executables
 add_rescue_test(test_field)
-add_rescue_test(test_constant_time)
 add_rescue_test(test_matrix)
 add_rescue_test(test_rescue_permutation)
 add_rescue_test(test_rescue_hash)

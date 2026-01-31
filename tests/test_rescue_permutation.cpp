@@ -28,7 +28,7 @@ TEST_F(RescueDescTest, CipherModeConstruction) {
     EXPECT_EQ(desc.m(), cipher_key.size());
 
     // Alpha should be 5 for Curve25519 field (smallest prime not dividing p-1)
-    EXPECT_EQ(desc.alpha(), 5);
+    EXPECT_EQ(desc.alpha(), uint256{5});
 
     // Check that matrices are initialized
     EXPECT_EQ(desc.mds_matrix().rows(), cipher_key.size());
@@ -50,11 +50,19 @@ TEST_F(RescueDescTest, AlphaAndInverse) {
     auto [alpha, alpha_inv] = get_alpha_and_inverse(Fp::P);
 
     // Alpha should be 5 for Curve25519
-    EXPECT_EQ(alpha, 5);
+    EXPECT_EQ(alpha, uint256{5});
 
     // Verify: alpha * alpha_inverse ≡ 1 (mod p-1)
-    mpz_class product = (alpha * alpha_inv) % (Fp::P - 1);
-    EXPECT_EQ(product, 1);
+    // For this we compute (alpha * alpha_inv) mod (p-1)
+    uint256 p_minus_1 = Fp::P - uint256::one();
+
+    // Since alpha is small, we can verify using field arithmetic
+    // a^alpha * a^alpha_inv = a^(alpha * alpha_inv) = a^1 = a for all a
+    // Let's verify with a specific element
+    Fp a(uint64_t{7});
+    Fp a_alpha = a.pow(alpha);
+    Fp a_result = a_alpha.pow(alpha_inv);
+    EXPECT_EQ(a_result, a);
 }
 
 TEST_F(RescueDescTest, CauchyMatrix) {

@@ -225,9 +225,9 @@ TEST_F(RescueCipherTest, InvalidCiphertextFormat) {
 TEST_F(RescueCipherTest, LargeValues) {
     // Test with values close to field modulus
     std::vector<Fp> plaintext = {
-        Fp(Fp::P - 1),  // Maximum valid value
-        Fp(Fp::P - 2),
-        Fp(Fp::P / 2)
+        Fp(Fp::P - uint256::one()),  // Maximum valid value
+        Fp(Fp::P - uint256{2}),
+        Fp(Fp::P >> 1)               // Fp::P / 2
     };
 
     auto ciphertext = cipher->encrypt(plaintext, nonce);

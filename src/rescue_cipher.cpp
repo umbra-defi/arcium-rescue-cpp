@@ -1,6 +1,5 @@
 #include <rescue/rescue_cipher.hpp>
 
-#include <rescue/constant_time.hpp>
 #include <rescue/matrix.hpp>
 #include <rescue/utils.hpp>
 
@@ -33,16 +32,16 @@ std::vector<Fp> RescueCipher::derive_key(std::span<const uint8_t> shared_secret)
 
     // Convert shared secret to field element
     // For Curve25519 base field, we can fit 32 bytes in one field element
-    mpz_class secret_value = deserialize_le(shared_secret);
-    
+    uint256 secret_value = deserialize_le(shared_secret);
+
     // Build the counter || Z || FixedInfo vector per NIST SP 800-56C Option 1
     // counter = 1 (we only need one iteration since reps = 1)
     // Z = shared_secret
     // FixedInfo = L = RESCUE_CIPHER_BLOCK_SIZE
     std::vector<Fp> kdf_input;
-    kdf_input.emplace_back(static_cast<unsigned long>(1));  // counter
+    kdf_input.emplace_back(uint64_t{1});  // counter
     kdf_input.emplace_back(secret_value);  // Z (shared secret)
-    kdf_input.emplace_back(static_cast<unsigned long>(RESCUE_CIPHER_BLOCK_SIZE));  // FixedInfo (L)
+    kdf_input.emplace_back(uint64_t{RESCUE_CIPHER_BLOCK_SIZE});  // FixedInfo (L)
 
     // Hash to derive key
     return hasher.digest(kdf_input);
@@ -51,7 +50,7 @@ std::vector<Fp> RescueCipher::derive_key(std::span<const uint8_t> shared_secret)
 std::vector<std::vector<uint8_t>> RescueCipher::encrypt(
     const std::vector<Fp>& plaintext,
     std::span<const uint8_t, RESCUE_CIPHER_NONCE_SIZE> nonce) const {
-    
+
     auto raw_ciphertext = encrypt_raw(plaintext, nonce);
 
     std::vector<std::vector<uint8_t>> result;
@@ -68,7 +67,7 @@ std::vector<std::vector<uint8_t>> RescueCipher::encrypt(
 std::vector<Fp> RescueCipher::decrypt(
     const std::vector<std::vector<uint8_t>>& ciphertext,
     std::span<const uint8_t, RESCUE_CIPHER_NONCE_SIZE> nonce) const {
-    
+
     std::vector<Fp> raw_ciphertext;
     raw_ciphertext.reserve(ciphertext.size());
 
@@ -86,7 +85,7 @@ std::vector<Fp> RescueCipher::decrypt(
 std::vector<Fp> RescueCipher::encrypt_raw(
     const std::vector<Fp>& plaintext,
     std::span<const uint8_t, RESCUE_CIPHER_NONCE_SIZE> nonce) const {
-    
+
     if (plaintext.empty()) {
         return {};
     }
@@ -96,10 +95,9 @@ std::vector<Fp> RescueCipher::encrypt_raw(
         (plaintext.size() + RESCUE_CIPHER_BLOCK_SIZE - 1) / RESCUE_CIPHER_BLOCK_SIZE;
 
     // Generate counter values
-    mpz_class nonce_value = deserialize_le(nonce);
+    uint256 nonce_value = deserialize_le(nonce);
     auto counter = generate_counter(nonce_value, n_blocks);
 
-    size_t bin_size = ct::get_bin_size(Fp::P - 1);
     std::vector<Fp> ciphertext;
     ciphertext.reserve(plaintext.size());
 
@@ -123,19 +121,8 @@ std::vector<Fp> RescueCipher::encrypt_raw(
 
         for (size_t i = block_start; i < block_end; ++i) {
             size_t idx = i - block_start;
-
-            // Verify plaintext is in valid range
-            const auto& pt_val = plaintext[i].value();
-            if (!ct::verify_bin_size(pt_val, bin_size - 1) ||
-                ct::sign_bit(pt_val, bin_size) ||
-                !ct::lt(pt_val, Fp::P, bin_size)) {
-                throw std::invalid_argument("Plaintext must be non-negative and less than p");
-            }
-
-            // Constant-time field addition
-            mpz_class sum = ct::field_add(pt_val, encrypted_counter_data[idx].value(),
-                                          Fp::P, bin_size);
-            ciphertext.emplace_back(sum);
+            // Use the optimized field addition (constant-time by design)
+            ciphertext.push_back(plaintext[i] + encrypted_counter_data[idx]);
         }
     }
 
@@ -145,7 +132,7 @@ std::vector<Fp> RescueCipher::encrypt_raw(
 std::vector<Fp> RescueCipher::decrypt_raw(
     const std::vector<Fp>& ciphertext,
     std::span<const uint8_t, RESCUE_CIPHER_NONCE_SIZE> nonce) const {
-    
+
     if (ciphertext.empty()) {
         return {};
     }
@@ -155,10 +142,9 @@ std::vector<Fp> RescueCipher::decrypt_raw(
         (ciphertext.size() + RESCUE_CIPHER_BLOCK_SIZE - 1) / RESCUE_CIPHER_BLOCK_SIZE;
 
     // Generate counter values
-    mpz_class nonce_value = deserialize_le(nonce);
+    uint256 nonce_value = deserialize_le(nonce);
     auto counter = generate_counter(nonce_value, n_blocks);
 
-    size_t bin_size = ct::get_bin_size(Fp::P - 1);
     std::vector<Fp> plaintext;
     plaintext.reserve(ciphertext.size());
 
@@ -182,26 +168,22 @@ std::vector<Fp> RescueCipher::decrypt_raw(
 
         for (size_t i = block_start; i < block_end; ++i) {
             size_t idx = i - block_start;
-
-            // Constant-time field subtraction
-            mpz_class diff = ct::field_sub(ciphertext[i].value(),
-                                           encrypted_counter_data[idx].value(),
-                                           Fp::P, bin_size);
-            plaintext.emplace_back(diff);
+            // Use the optimized field subtraction (constant-time by design)
+            plaintext.push_back(ciphertext[i] - encrypted_counter_data[idx]);
         }
     }
 
     return plaintext;
 }
 
-std::vector<Fp> RescueCipher::generate_counter(const mpz_class& nonce, size_t n_blocks) const {
+std::vector<Fp> RescueCipher::generate_counter(const uint256& nonce, size_t n_blocks) const {
     std::vector<Fp> counter;
     counter.reserve(n_blocks * RESCUE_CIPHER_BLOCK_SIZE);
 
     for (size_t block = 0; block < n_blocks; ++block) {
         // Counter format: [nonce, block_index, 0, 0, ...]
         counter.emplace_back(nonce);
-        counter.emplace_back(static_cast<unsigned long>(block));
+        counter.emplace_back(uint64_t{block});
 
         // Pad to block size
         for (size_t j = 2; j < RESCUE_CIPHER_BLOCK_SIZE; ++j) {
@@ -223,14 +205,11 @@ std::vector<Fp> RescueCipher::process_block(const std::vector<Fp>& data,
     Matrix encrypted_counter = desc_.permute(counter_vec);
     auto encrypted_counter_data = encrypted_counter.to_vector();
 
-    size_t bin_size = ct::get_bin_size(Fp::P - 1);
     std::vector<Fp> result;
     result.reserve(data.size());
 
     for (size_t i = 0; i < data.size(); ++i) {
-        mpz_class sum = ct::field_add(data[i].value(), encrypted_counter_data[i].value(),
-                                      Fp::P, bin_size);
-        result.emplace_back(sum);
+        result.push_back(data[i] + encrypted_counter_data[i]);
     }
 
     return result;

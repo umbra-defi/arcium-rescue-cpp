@@ -28,8 +28,7 @@ option(RESCUE_BUILD_EXAMPLES "Build examples" ON)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include(CompilerWarnings)
 
-# Find required dependencies
-find_package(GMP REQUIRED)
+# Find required dependencies (OpenSSL only - no GMP!)
 find_package(OpenSSL REQUIRED)
 
 # Main library

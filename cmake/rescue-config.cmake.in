@@ -2,8 +2,7 @@
 
 include(CMakeFindDependencyMacro)
 
-# Find required dependencies
-find_dependency(GMP REQUIRED)
+# Find required dependencies (OpenSSL only)
 find_dependency(OpenSSL REQUIRED)
 
 # Include targets file

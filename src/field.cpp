@@ -4,153 +4,117 @@
 #include <sstream>
 #include <stdexcept>
 
+// For OpenSSL random bytes
+#include <openssl/rand.h>
+
 namespace rescue {
 
 // Static constants initialization
 // p = 2^255 - 19
-const mpz_class Fp::P("0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffed");
-const Fp Fp::ZERO(static_cast<unsigned long>(0));
-const Fp Fp::ONE(static_cast<unsigned long>(1));
+const uint256 Fp::P = fp::P;
+const Fp Fp::ZERO{uint64_t{0}};
+const Fp Fp::ONE{uint64_t{1}};
 
-Fp::Fp(uint64_t value) : value_(static_cast<unsigned long>(value)) {
-    reduce();
-}
-
-Fp::Fp(const mpz_class& value) : value_(value) {
-    reduce();
-}
-
-Fp::Fp(mpz_class&& value) : value_(std::move(value)) {
-    reduce();
-}
-
-Fp::Fp(std::string_view hex_str) {
-    std::string str(hex_str);
-    // Handle 0x prefix
-    if (str.size() >= 2 && str[0] == '0' && (str[1] == 'x' || str[1] == 'X')) {
-        str = str.substr(2);
+Fp::Fp(uint64_t value) : value_(value) {
+    // Small values don't need reduction
+    // but we call reduce() for consistency
+    if (value >= 0x7fffffffffffffffULL) {
+        reduce();
     }
-    value_ = mpz_class(str, 16);
+}
+
+Fp::Fp(const uint256& value) : value_(value) {
     reduce();
 }
 
-Fp::Fp(std::span<const uint8_t> bytes) {
-    // Little-endian deserialization
-    value_ = 0;
-    for (size_t i = bytes.size(); i > 0; --i) {
-        value_ <<= 8;
-        value_ |= bytes[i - 1];
-    }
+Fp::Fp(uint256&& value) : value_(std::move(value)) {
+    reduce();
+}
+
+Fp::Fp(std::string_view hex_str) : value_(hex_str) {
+    reduce();
+}
+
+Fp::Fp(std::span<const uint8_t> bytes) : value_(bytes) {
     reduce();
 }
 
 void Fp::reduce() {
     // Ensure value is in [0, p)
-    if (value_ < 0) {
-        value_ = ((value_ % P) + P) % P;
-    } else if (value_ >= P) {
-        value_ %= P;
-    }
+    value_ = fp::reduce_full(value_);
 }
 
 Fp Fp::random() {
-    // Generate random bytes and reduce
-    static thread_local std::random_device rd;
-    static thread_local std::mt19937_64 gen(rd());
-
-    // Generate 32 random bytes
+    // Generate 32 random bytes using OpenSSL
     std::array<uint8_t, 32> bytes;
-    for (size_t i = 0; i < 32; i += sizeof(uint64_t)) {
-        uint64_t val = gen();
-        for (size_t j = 0; j < sizeof(uint64_t) && (i + j) < 32; ++j) {
-            bytes[i + j] = static_cast<uint8_t>((val >> (j * 8)) & 0xFF);
+    if (RAND_bytes(bytes.data(), static_cast<int>(bytes.size())) != 1) {
+        // Fallback to std::random_device if OpenSSL fails
+        std::random_device rd;
+        std::mt19937_64 gen(rd());
+        for (size_t i = 0; i < 32; i += sizeof(uint64_t)) {
+            uint64_t val = gen();
+            for (size_t j = 0; j < sizeof(uint64_t) && (i + j) < 32; ++j) {
+                bytes[i + j] = static_cast<uint8_t>((val >> (j * 8)) & 0xFF);
+            }
         }
     }
 
-    // Convert bytes to mpz_class (little-endian)
-    mpz_class result = 0;
-    for (size_t i = 32; i > 0; --i) {
-        result <<= 8;
-        result |= static_cast<unsigned long>(bytes[i - 1]);
-    }
+    // Convert bytes to uint256 (little-endian)
+    uint256 result = uint256::from_bytes(bytes);
+
     // Reduce modulo p
-    result %= P;
+    result = fp::reduce_full(result);
+
     return Fp(std::move(result));
 }
 
-Fp Fp::create(const mpz_class& value) {
+Fp Fp::create(const uint256& value) {
     return Fp(value);
 }
 
 Fp Fp::add(const Fp& rhs) const {
-    mpz_class result = value_ + rhs.value_;
-    if (result >= P) {
-        result -= P;
-    }
-    return Fp(std::move(result));
+    return Fp(fp::add(value_, rhs.value_));
 }
 
 Fp Fp::sub(const Fp& rhs) const {
-    mpz_class result = value_ - rhs.value_;
-    if (result < 0) {
-        result += P;
-    }
-    return Fp(std::move(result));
+    return Fp(fp::sub(value_, rhs.value_));
 }
 
 Fp Fp::mul(const Fp& rhs) const {
-    mpz_class result;
-    mpz_mul(result.get_mpz_t(), value_.get_mpz_t(), rhs.value_.get_mpz_t());
-    mpz_mod(result.get_mpz_t(), result.get_mpz_t(), P.get_mpz_t());
-    return Fp(std::move(result));
+    return Fp(fp::mul(value_, rhs.value_));
 }
 
 Fp Fp::neg() const {
-    if (value_ == 0) {
-        return *this;
-    }
-    return Fp(P - value_);
+    // fp::neg already handles zero correctly via constant-time mask
+    // No branch needed here
+    return Fp(fp::neg(value_));
 }
 
 Fp Fp::inv() const {
     if (is_zero()) {
         throw std::domain_error("Cannot invert zero in field");
     }
-    mpz_class result;
-    if (mpz_invert(result.get_mpz_t(), value_.get_mpz_t(), P.get_mpz_t()) == 0) {
-        throw std::domain_error("Failed to compute inverse");
-    }
-    return Fp(std::move(result));
+    return Fp(fp::inv(value_));
 }
 
-Fp Fp::pow(const mpz_class& exp) const {
-    if (exp < 0) {
-        // Negative exponent: compute inverse first
-        return inv().pow(-exp);
-    }
-
-    mpz_class result;
-    mpz_powm(result.get_mpz_t(), value_.get_mpz_t(), exp.get_mpz_t(), P.get_mpz_t());
-    return Fp(std::move(result));
+Fp Fp::pow(const uint256& exp) const {
+    return Fp(fp::pow(value_, exp));
 }
 
 Fp Fp::pow(uint64_t exp) const {
-    return pow(mpz_class(static_cast<unsigned long>(exp)));
+    return Fp(fp::pow(value_, exp));
 }
 
 Fp Fp::square() const {
-    mpz_class result;
-    mpz_mul(result.get_mpz_t(), value_.get_mpz_t(), value_.get_mpz_t());
-    mpz_mod(result.get_mpz_t(), result.get_mpz_t(), P.get_mpz_t());
-    return Fp(std::move(result));
+    return Fp(fp::sqr(value_));
 }
 
 bool Fp::is_zero() const {
-    return value_ == 0;
+    return value_.is_zero();
 }
 
 bool Fp::is_one() const {
-    return value_ == 1;
+    return value_.is_one();
 }
 
 bool Fp::operator==(const Fp& rhs) const {
@@ -158,25 +122,15 @@ bool Fp::operator==(const Fp& rhs) const {
 }
 
 std::strong_ordering Fp::operator<=>(const Fp& rhs) const {
-    int cmp = mpz_cmp(value_.get_mpz_t(), rhs.value_.get_mpz_t());
-    if (cmp < 0) return std::strong_ordering::less;
-    if (cmp > 0) return std::strong_ordering::greater;
-    return std::strong_ordering::equal;
+    return value_ <=> rhs.value_;
 }
 
 std::array<uint8_t, Fp::BYTES> Fp::to_bytes() const {
-    std::array<uint8_t, BYTES> result{};
-    to_bytes(result);
-    return result;
+    return value_.to_bytes_le();
 }
 
 void Fp::to_bytes(std::span<uint8_t, BYTES> out) const {
-    // Little-endian serialization
-    mpz_class temp = value_;
-    for (size_t i = 0; i < BYTES; ++i) {
-        out[i] = static_cast<uint8_t>(mpz_get_ui(temp.get_mpz_t()) & 0xFF);
-        temp >>= 8;
-    }
+    value_.to_bytes_le(out);
 }
 
 Fp Fp::from_bytes(std::span<const uint8_t> bytes) {
@@ -184,25 +138,20 @@ Fp Fp::from_bytes(std::span<const uint8_t> bytes) {
 }
 
 std::string Fp::to_hex() const {
-    std::ostringstream oss;
-    oss << "0x" << std::hex << value_;
-    return oss.str();
+    return value_.to_hex();
 }
 
 std::string Fp::to_string() const {
-    return value_.get_str();
+    return value_.to_string();
 }
 
 std::ostream& operator<<(std::ostream& os, const Fp& fp) {
     return os << fp.to_string();
 }
 
-mpz_class mod_inverse(const mpz_class& a, const mpz_class& m) {
-    mpz_class result;
-    if (mpz_invert(result.get_mpz_t(), a.get_mpz_t(), m.get_mpz_t()) == 0) {
-        throw std::domain_error("No modular inverse exists");
-    }
-    return result;
+uint256 mod_inverse(const uint256& a, const uint256& /*m*/) {
+    // We always use the optimized inversion for p = 2^255 - 19
+    return fp::inv(a);
 }
 
 }  // namespace rescue

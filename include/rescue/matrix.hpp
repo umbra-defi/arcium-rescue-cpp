@@ -47,11 +47,11 @@ public:
     explicit Matrix(const std::vector<std::vector<Fp>>& data);
 
     /**
-     * @brief Construct a matrix from a 2D vector of integers.
-     * @param data 2D vector of bigints (row-major).
+     * @brief Construct a matrix from a 2D vector of uint256.
+     * @param data 2D vector of uint256 (row-major).
      * @throws std::invalid_argument if rows have different lengths.
      */
-    explicit Matrix(const std::vector<std::vector<mpz_class>>& data);
+    explicit Matrix(const std::vector<std::vector<uint256>>& data);
 
     /**
      * @brief Construct a column vector from a 1D vector.
@@ -60,10 +60,10 @@ public:
     explicit Matrix(const std::vector<Fp>& data);
 
     /**
-     * @brief Construct a column vector from a 1D vector of bigints.
-     * @param data Vector of bigints.
+     * @brief Construct a column vector from a 1D vector of uint256.
+     * @param data Vector of uint256.
      */
-    explicit Matrix(const std::vector<mpz_class>& data);
+    explicit Matrix(const std::vector<uint256>& data);
 
     // Default copy/move operations
     Matrix(const Matrix&) = default;
@@ -179,10 +179,10 @@ public:
 
     /**
      * @brief Element-wise exponentiation.
-     * @param exp The exponent.
+     * @param exp The exponent (uint256).
      * @return Matrix with each element raised to exp.
      */
-    [[nodiscard]] Matrix pow(const mpz_class& exp) const;
+    [[nodiscard]] Matrix pow(const uint256& exp) const;
 
     /**
      * @brief Element-wise exponentiation (uint64_t version).
@@ -259,10 +259,10 @@ private:
 [[nodiscard]] Matrix to_column_vector(const std::vector<Fp>& elements);
 
 /**
- * @brief Create a column vector matrix from bigints.
- * @param elements The bigint elements.
+ * @brief Create a column vector matrix from uint256 values.
+ * @param elements The uint256 elements.
  * @return Column vector matrix.
  */
-[[nodiscard]] Matrix to_column_vector(const std::vector<mpz_class>& elements);
+[[nodiscard]] Matrix to_column_vector(const std::vector<uint256>& elements);
 
 }  // namespace rescue

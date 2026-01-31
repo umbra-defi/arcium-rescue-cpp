@@ -8,6 +8,9 @@
  * the prime field p = 2^255 - 19 (Curve25519 base field).
  */
 
+#include <rescue/fp_impl.hpp>
+#include <rescue/uint256.hpp>
+
 #include <array>
 #include <compare>
 #include <cstddef>
@@ -16,8 +19,6 @@
 #include <span>
 #include <string>
 #include <string_view>
-
-#include <gmpxx.h>
 
 namespace rescue {
 
@@ -29,8 +30,8 @@ namespace rescue {
  */
 class Fp {
 public:
-    /// The field modulus p = 2^255 - 19
-    static const mpz_class P;
+    /// The field modulus p = 2^255 - 19 (as uint256)
+    static const uint256 P;
 
     /// Number of bits in the field modulus
     static constexpr size_t BITS = 255;
@@ -47,7 +48,7 @@ public:
     /**
      * @brief Default constructor, initializes to zero.
      */
-    Fp() : value_(0) {}
+    Fp() : value_{} {}
 
     /**
      * @brief Construct from an unsigned integer.
@@ -56,16 +57,16 @@ public:
     explicit Fp(uint64_t value);
 
     /**
-     * @brief Construct from a GMP integer.
+     * @brief Construct from a uint256.
      * @param value The value (will be reduced modulo p).
      */
-    explicit Fp(const mpz_class& value);
+    explicit Fp(const uint256& value);
 
     /**
-     * @brief Construct from a GMP integer (move).
+     * @brief Construct from a uint256 (move).
      * @param value The value (will be reduced modulo p).
      */
-    explicit Fp(mpz_class&& value);
+    explicit Fp(uint256&& value);
 
     /**
      * @brief Construct from a hexadecimal string.
@@ -97,7 +98,7 @@ public:
      * @param value The value to reduce.
      * @return The field element.
      */
-    [[nodiscard]] static Fp create(const mpz_class& value);
+    [[nodiscard]] static Fp create(const uint256& value);
 
     // Arithmetic operations
 
@@ -137,10 +138,10 @@ public:
 
     /**
      * @brief Raise to a power.
-     * @param exp The exponent (non-negative).
+     * @param exp The exponent (non-negative uint256).
      * @return this^exp (mod p).
      */
-    [[nodiscard]] Fp pow(const mpz_class& exp) const;
+    [[nodiscard]] Fp pow(const uint256& exp) const;
 
     /**
      * @brief Raise to a power (uint64_t version).
@@ -201,10 +202,10 @@ public:
     [[nodiscard]] static Fp from_bytes(std::span<const uint8_t> bytes);
 
     /**
-     * @brief Get the underlying GMP value (const reference).
-     * @return Reference to the internal mpz_class.
+     * @brief Get the underlying uint256 value (const reference).
+     * @return Reference to the internal uint256.
      */
-    [[nodiscard]] const mpz_class& value() const { return value_; }
+    [[nodiscard]] const uint256& value() const { return value_; }
 
     /**
      * @brief Convert to a hexadecimal string.
@@ -242,7 +243,7 @@ public:
     friend std::ostream& operator<<(std::ostream& os, const Fp& fp);
 
 private:
-    mpz_class value_;
+    uint256 value_;
 
     /**
      * @brief Reduce the value modulo p (internal helper).
@@ -251,11 +252,11 @@ private:
 };
 
 /**
- * @brief Compute the modular inverse using extended Euclidean algorithm.
- * @param a The value to invert.
- * @param m The modulus.
- * @return a^(-1) mod m.
+ * @brief Compute the modular inverse using Fermat's little theorem.
+ * @param a The value to invert (as uint256).
+ * @param m The modulus (unused, always uses p = 2^255 - 19).
+ * @return a^(-1) mod p.
  */
-[[nodiscard]] mpz_class mod_inverse(const mpz_class& a, const mpz_class& m);
+[[nodiscard]] uint256 mod_inverse(const uint256& a, const uint256& m);
 
 }  // namespace rescue

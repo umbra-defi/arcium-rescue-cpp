@@ -76,7 +76,7 @@ std::vector<Fp> RescuePrimeHash::digest(const std::vector<Fp>& message) const {
     return result;
 }
 
-std::vector<Fp> RescuePrimeHash::digest(const std::vector<mpz_class>& message) const {
+std::vector<Fp> RescuePrimeHash::digest(const std::vector<uint256>& message) const {
     std::vector<Fp> fp_message;
     fp_message.reserve(message.size());
     for (const auto& val : message) {

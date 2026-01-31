@@ -1,6 +1,6 @@
 #include <rescue/matrix.hpp>
 
-#include <rescue/constant_time.hpp>
+#include <rescue/fp_impl.hpp>
 
 #include <algorithm>
 #include <sstream>
@@ -35,7 +35,7 @@ Matrix::Matrix(const std::vector<std::vector<Fp>>& data) {
     }
 }
 
-Matrix::Matrix(const std::vector<std::vector<mpz_class>>& data) {
+Matrix::Matrix(const std::vector<std::vector<uint256>>& data) {
     if (data.empty()) {
         rows_ = 0;
         cols_ = 0;
@@ -63,7 +63,7 @@ Matrix::Matrix(const std::vector<std::vector<mpz_class>>& data) {
 
 Matrix::Matrix(const std::vector<Fp>& data) : rows_(data.size()), cols_(1), data_(data) {}
 
-Matrix::Matrix(const std::vector<mpz_class>& data) : rows_(data.size()), cols_(1) {
+Matrix::Matrix(const std::vector<uint256>& data) : rows_(data.size()), cols_(1) {
     data_.reserve(data.size());
     for (const auto& val : data) {
         data_.emplace_back(val);
@@ -149,60 +149,64 @@ Matrix Matrix::mat_mul(const Matrix& rhs) const {
     return result;
 }
 
-Matrix Matrix::add(const Matrix& rhs, bool constant_time) const {
+Matrix Matrix::add(const Matrix& rhs, [[maybe_unused]] bool constant_time) const {
     if (rows_ != rhs.rows_ || cols_ != rhs.cols_) {
         throw std::invalid_argument("Matrix dimensions must match for addition");
     }
 
     Matrix result(rows_, cols_);
-
-    if (constant_time) {
-        size_t bin_size = ct::get_bin_size(Fp::P - 1);
-        for (size_t i = 0; i < data_.size(); ++i) {
-            mpz_class sum = ct::field_add(data_[i].value(), rhs.data_[i].value(), Fp::P, bin_size);
-            result.data_[i] = Fp(sum);
-        }
-    } else {
-        for (size_t i = 0; i < data_.size(); ++i) {
-            result.data_[i] = data_[i] + rhs.data_[i];
-        }
+    // All field operations are constant-time by design
+    for (size_t i = 0; i < data_.size(); ++i) {
+        result.data_[i] = data_[i] + rhs.data_[i];
     }
 
     return result;
 }
 
-Matrix Matrix::sub(const Matrix& rhs, bool constant_time) const {
+Matrix Matrix::sub(const Matrix& rhs, [[maybe_unused]] bool constant_time) const {
     if (rows_ != rhs.rows_ || cols_ != rhs.cols_) {
         throw std::invalid_argument("Matrix dimensions must match for subtraction");
     }
 
     Matrix result(rows_, cols_);
-
-    if (constant_time) {
-        size_t bin_size = ct::get_bin_size(Fp::P - 1);
-        for (size_t i = 0; i < data_.size(); ++i) {
-            mpz_class diff = ct::field_sub(data_[i].value(), rhs.data_[i].value(), Fp::P, bin_size);
-            result.data_[i] = Fp(diff);
-        }
-    } else {
-        for (size_t i = 0; i < data_.size(); ++i) {
-            result.data_[i] = data_[i] - rhs.data_[i];
-        }
+    // All field operations are constant-time by design
+    for (size_t i = 0; i < data_.size(); ++i) {
+        result.data_[i] = data_[i] - rhs.data_[i];
     }
 
     return result;
 }
 
-Matrix Matrix::pow(const mpz_class& exp) const {
+Matrix Matrix::pow(const uint256& exp) const {
     Matrix result(rows_, cols_);
-    for (size_t i = 0; i < data_.size(); ++i) {
-        result.data_[i] = data_[i].pow(exp);
+
+    // Check for the special case of alpha=5 (Rescue S-box)
+    if (exp == uint256{5}) {
+        for (size_t i = 0; i < data_.size(); ++i) {
+            result.data_[i] = Fp(fp::pow5(data_[i].value()));
+        }
+    } else {
+        for (size_t i = 0; i < data_.size(); ++i) {
+            result.data_[i] = data_[i].pow(exp);
+        }
     }
     return result;
 }
 
 Matrix Matrix::pow(uint64_t exp) const {
-    return pow(mpz_class(static_cast<unsigned long>(exp)));
+    Matrix result(rows_, cols_);
+
+    // Check for the special case of alpha=5 (Rescue S-box)
+    if (exp == 5) {
+        for (size_t i = 0; i < data_.size(); ++i) {
+            result.data_[i] = Fp(fp::pow5(data_[i].value()));
+        }
+    } else {
+        for (size_t i = 0; i < data_.size(); ++i) {
+            result.data_[i] = data_[i].pow(exp);
+        }
+    }
+    return result;
 }
 
 Matrix Matrix::scalar_mul(const Fp& scalar) const {
@@ -342,7 +346,7 @@ Matrix to_column_vector(const std::vector<Fp>& elements) {
     return Matrix(elements);
 }
 
-Matrix to_column_vector(const std::vector<mpz_class>& elements) {
+Matrix to_column_vector(const std::vector<uint256>& elements) {
     return Matrix(elements);
 }
 

@@ -78,11 +78,11 @@ public:
     [[nodiscard]] std::vector<Fp> digest(const std::vector<Fp>& message) const;
 
     /**
-     * @brief Compute the hash of a message given as bigints.
-     * @param message The input message as bigints.
+     * @brief Compute the hash of a message given as uint256 values.
+     * @param message The input message as uint256 values.
      * @return The hash digest as field elements.
      */
-    [[nodiscard]] std::vector<Fp> digest(const std::vector<mpz_class>& message) const;
+    [[nodiscard]] std::vector<Fp> digest(const std::vector<uint256>& message) const;
 
     /**
      * @brief Get the rate parameter.

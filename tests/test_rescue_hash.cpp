@@ -6,6 +6,7 @@
 #include <rescue/rescue_hash.hpp>
 
 #include <gtest/gtest.h>
+#include <set>
 
 using namespace rescue;
 
@@ -155,10 +156,10 @@ TEST_F(RescueHashTest, AvalancheEffect) {
     EXPECT_GE(differences, 1);
 }
 
-TEST_F(RescueHashTest, DigestFromBigInts) {
-    std::vector<mpz_class> msg = {
-        mpz_class("123456789012345678901234567890"),
-        mpz_class("987654321098765432109876543210")
+TEST_F(RescueHashTest, DigestFromUint256) {
+    std::vector<uint256> msg = {
+        uint256("123456789012345678901234567890"),
+        uint256("987654321098765432109876543210")
     };
 
     auto digest = hasher->digest(msg);
@@ -187,8 +188,7 @@ TEST_F(RescueHashTest, OutputInFieldRange) {
 
     // All output elements should be valid field elements
     for (const auto& elem : digest) {
-        EXPECT_GE(elem.value(), 0);
-        EXPECT_LT(elem.value(), Fp::P);
+        EXPECT_FALSE(elem.value() >= Fp::P);
     }
 }
 

@@ -61,7 +61,7 @@ BENCHMARK(BM_FieldInversion);
 
 static void BM_FieldExponentiation(benchmark::State& state) {
     Fp base = Fp::random();
-    mpz_class exp("12345678901234567890");
+    uint256 exp("12345678901234567890");
 
     for (auto _ : state) {
         Fp result = base.pow(exp);
@@ -98,7 +98,7 @@ BENCHMARK(BM_MatrixMultiplication_12x12);
 
 static void BM_MatrixPow(benchmark::State& state) {
     Matrix a = Matrix::random(5, 5);
-    mpz_class exp(5);  // Alpha = 5
+    uint64_t exp = 5;  // Alpha = 5
 
     for (auto _ : state) {
         Matrix result = a.pow(exp);
@@ -252,46 +252,6 @@ static void BM_RescueCipher_Decrypt_1Block(benchmark::State& state) {
     }
 }
 BENCHMARK(BM_RescueCipher_Decrypt_1Block);
-
-// ============================================================================
-// Constant-Time Operations Benchmarks
-// ============================================================================
-
-static void BM_ConstantTimeFieldAdd(benchmark::State& state) {
-    Fp a = Fp::random();
-    Fp b = Fp::random();
-    size_t bin_size = ct::get_bin_size(Fp::P - 1);
-
-    for (auto _ : state) {
-        auto result = ct::field_add(a.value(), b.value(), Fp::P, bin_size);
-        benchmark::DoNotOptimize(result);
-    }
-}
-BENCHMARK(BM_ConstantTimeFieldAdd);
-
-static void BM_ConstantTimeFieldSub(benchmark::State& state) {
-    Fp a = Fp::random();
-    Fp b = Fp::random();
-    size_t bin_size = ct::get_bin_size(Fp::P - 1);
-
-    for (auto _ : state) {
-        auto result = ct::field_sub(a.value(), b.value(), Fp::P, bin_size);
-        benchmark::DoNotOptimize(result);
-    }
-}
-BENCHMARK(BM_ConstantTimeFieldSub);
-
-static void BM_ConstantTimeLt(benchmark::State& state) {
-    Fp a = Fp::random();
-    Fp b = Fp::random();
-    size_t bin_size = ct::get_bin_size(Fp::P - 1);
-
-    for (auto _ : state) {
-        bool result = ct::lt(a.value(), b.value(), bin_size);
-        benchmark::DoNotOptimize(result);
-    }
-}
-BENCHMARK(BM_ConstantTimeLt);
 
 // ============================================================================
 // Throughput Benchmarks

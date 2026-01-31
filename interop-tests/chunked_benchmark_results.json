@@ -1,0 +1,18 @@
+{
+  "description": "Chunked Benchmark Results (100k tests)",
+  "chunk_size": 1000,
+  "total_tests": 100000,
+  "num_chunks": 100,
+  "start_time": "2026-01-30T22:31:37Z",
+  "js_totals": {
+    "encrypt_time_ns": 0,
+    "decrypt_time_ns": 0,
+    "elements": 0
+  },
+  "cpp_totals": {
+    "encrypt_time_ns": 0,
+    "decrypt_time_ns": 0,
+    "elements": 0
+  },
+  "chunks": []
+}

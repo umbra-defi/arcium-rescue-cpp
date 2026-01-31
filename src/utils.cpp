@@ -9,29 +9,31 @@
 
 namespace rescue {
 
-std::vector<uint8_t> serialize_le(const mpz_class& value, size_t length_in_bytes) {
+std::vector<uint8_t> serialize_le(const uint256& value, size_t length_in_bytes) {
     std::vector<uint8_t> result(length_in_bytes, 0);
-    mpz_class temp = value;
 
-    for (size_t i = 0; i < length_in_bytes; ++i) {
-        result[i] = static_cast<uint8_t>(mpz_get_ui(temp.get_mpz_t()) & 0xFF);
-        temp >>= 8;
-    }
+    // Get the bytes from uint256 (always 32 bytes)
+    auto bytes = value.to_bytes_le();
 
-    if (temp > 0) {
-        throw std::overflow_error("Value is too large for the specified byte length");
+    // Copy up to the requested length
+    size_t copy_len = std::min(length_in_bytes, bytes.size());
+    std::copy(bytes.begin(), bytes.begin() + copy_len, result.begin());
+
+    // Check if value is too large for the specified length
+    if (length_in_bytes < uint256::BYTES) {
+        // Check if any bytes beyond length_in_bytes are non-zero
+        for (size_t i = length_in_bytes; i < bytes.size(); ++i) {
+            if (bytes[i] != 0) {
+                throw std::overflow_error("Value is too large for the specified byte length");
+            }
+        }
     }
 
     return result;
 }
 
-mpz_class deserialize_le(std::span<const uint8_t> bytes) {
-    mpz_class result = 0;
-    for (size_t i = bytes.size(); i > 0; --i) {
-        result <<= 8;
-        result |= bytes[i - 1];
-    }
-    return result;
+uint256 deserialize_le(std::span<const uint8_t> bytes) {
+    return uint256::from_bytes(bytes);
 }
 
 std::vector<uint8_t> random_bytes(size_t length) {
@@ -42,11 +44,12 @@ std::vector<uint8_t> random_bytes(size_t length) {
     return result;
 }
 
-mpz_class random_field_elem(const mpz_class& bound) {
+uint256 random_field_elem(const uint256& bound) {
     // Calculate byte length needed
-    size_t byte_length = (mpz_sizeinbase(bound.get_mpz_t(), 2) + 7) / 8;
+    size_t byte_length = (bound.bit_length() + 7) / 8;
+    if (byte_length == 0) byte_length = 1;
 
-    mpz_class result;
+    uint256 result;
     do {
         auto bytes = random_bytes(byte_length);
         result = deserialize_le(bytes);

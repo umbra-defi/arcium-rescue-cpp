@@ -33,9 +33,6 @@
 // Matrix operations
 #include <rescue/matrix.hpp>
 
-// Constant-time primitives
-#include <rescue/constant_time.hpp>
-
 // Utility functions
 #include <rescue/utils.hpp>
 
@@ -57,5 +54,4 @@
  * - rescue::Matrix - Matrix operations over Fp
  * - rescue::RescuePrimeHash - Sponge-based hash function
  * - rescue::RescueCipher - Block cipher in CTR mode
- * - rescue::ct - Constant-time operations namespace
  */
