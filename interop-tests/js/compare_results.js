@@ -12,8 +12,8 @@ function loadJson(path) {
 }
 
 function main() {
-    const jsVectors = loadJson('test_vectors_js.json');
-    const cppResults = loadJson('test_vectors_cpp.json');
+    const jsVectors = loadJson('data/test_vectors_js.json');
+    const cppResults = loadJson('data/test_vectors_cpp.json');
     
     console.log('='.repeat(60));
     console.log('Rescue Cipher Interoperability Comparison Report');

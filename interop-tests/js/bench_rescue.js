@@ -323,9 +323,9 @@ function runBenchmarks() {
         benchmarks: results
     };
 
-    fs.writeFileSync('benchmark_results_js.json', JSON.stringify(output, null, 2));
+    fs.writeFileSync('data/benchmark_results_js.json', JSON.stringify(output, null, 2));
     console.log('\n' + '='.repeat(80));
-    console.log('Results saved to benchmark_results_js.json');
+    console.log('Results saved to data/benchmark_results_js.json');
 
     return output;
 }

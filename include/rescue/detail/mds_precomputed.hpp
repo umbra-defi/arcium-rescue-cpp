@@ -14,7 +14,7 @@
  * inverses during initialization.
  */
 
-#include <rescue/uint256.hpp>
+#include <rescue/detail/uint256.hpp>
 
 #include <array>
 #include <cstddef>

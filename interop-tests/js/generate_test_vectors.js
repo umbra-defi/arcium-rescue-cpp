@@ -125,8 +125,8 @@ function generateTestVectors() {
         test_vectors: testVectors
     };
     
-    fs.writeFileSync('test_vectors_js.json', JSON.stringify(output, null, 2));
-    console.log(`\nWritten ${NUM_TEST_CASES} test vectors to test_vectors_js.json`);
+    fs.writeFileSync('data/test_vectors_js.json', JSON.stringify(output, null, 2));
+    console.log(`\nWritten ${NUM_TEST_CASES} test vectors to data/test_vectors_js.json`);
 }
 
 // Run

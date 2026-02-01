@@ -13,7 +13,7 @@
  * 4. Inversion via Fermat's little theorem with optimized addition chain
  */
 
-#include <rescue/uint256.hpp>
+#include <rescue/detail/uint256.hpp>
 
 #include <cstdint>
 

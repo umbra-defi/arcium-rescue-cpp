@@ -1,6 +1,6 @@
 #include <rescue/matrix.hpp>
 
-#include <rescue/fp_impl.hpp>
+#include <rescue/detail/fp_impl.hpp>
 
 #include <algorithm>
 #include <sstream>

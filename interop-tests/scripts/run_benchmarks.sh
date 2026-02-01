@@ -4,7 +4,8 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+INTEROP_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+PROJECT_ROOT="$(cd "$INTEROP_DIR/.." && pwd)"
 BUILD_DIR="$PROJECT_ROOT/build"
 
 echo "=============================================="
@@ -32,13 +33,13 @@ cd "$BUILD_DIR/benchmarks"
 ./bench_rescue --benchmark_counters_tabular=true
 
 # Copy results to interop-tests for comparison
-cp -f benchmark_results_cpp.json "$SCRIPT_DIR/" 2>/dev/null || true
+cp -f benchmark_results_cpp.json "$INTEROP_DIR/data/" 2>/dev/null || true
 
 echo
 echo "=============================================="
 echo "Running JavaScript Benchmark"
 echo "=============================================="
-cd "$SCRIPT_DIR"
+cd "$INTEROP_DIR"
 
 # Check if node_modules exists
 if [ ! -d "node_modules" ]; then
@@ -46,13 +47,13 @@ if [ ! -d "node_modules" ]; then
     pnpm install
 fi
 
-node bench_rescue.js
+node js/bench_rescue.js
 
 echo
 echo "=============================================="
 echo "Comparing Results"
 echo "=============================================="
-node compare_benchmarks.js
+node js/compare_benchmarks.js
 
 echo
 echo "=============================================="

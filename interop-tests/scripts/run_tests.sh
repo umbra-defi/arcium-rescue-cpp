@@ -4,7 +4,8 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$SCRIPT_DIR"
+INTEROP_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+cd "$INTEROP_DIR"
 
 echo "========================================"
 echo "Rescue Cipher Interoperability Tests"
@@ -13,7 +14,7 @@ echo
 
 # Step 1: Generate fresh JS test vectors
 echo "Step 1: Generating JavaScript test vectors..."
-node generate_test_vectors.js
+node js/generate_test_vectors.js
 echo
 
 # Step 2: Build C++ test
@@ -27,12 +28,12 @@ echo
 
 # Step 3: Run C++ test
 echo "Step 3: Running C++ interop test..."
-./build/test_interop test_vectors_js.json test_vectors_cpp.json
+./build/test_interop data/test_vectors_js.json data/test_vectors_cpp.json
 echo
 
 # Step 4: Compare results
 echo "Step 4: Comparing results..."
-node compare_results.js
+node js/compare_results.js
 
 echo
 echo "========================================"

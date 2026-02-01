@@ -8,8 +8,8 @@
  * the prime field p = 2^255 - 19 (Curve25519 base field).
  */
 
-#include <rescue/fp_impl.hpp>
-#include <rescue/uint256.hpp>
+#include <rescue/detail/fp_impl.hpp>
+#include <rescue/detail/uint256.hpp>
 
 #include <array>
 #include <compare>

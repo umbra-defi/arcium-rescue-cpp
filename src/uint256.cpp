@@ -1,4 +1,4 @@
-#include <rescue/uint256.hpp>
+#include <rescue/detail/uint256.hpp>
 
 #include <algorithm>
 #include <iomanip>

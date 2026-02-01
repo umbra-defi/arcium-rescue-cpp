@@ -5,7 +5,7 @@
  * @brief Utility functions for serialization, random generation, and SHAKE256.
  */
 
-#include <rescue/uint256.hpp>
+#include <rescue/detail/uint256.hpp>
 
 #include <array>
 #include <cstddef>

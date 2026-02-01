@@ -298,7 +298,7 @@ async function runBenchmark() {
         test_vectors: testVectors
     };
 
-    const vectorsFile = 'test_vectors_100k.ndjson';
+    const vectorsFile = 'data/test_vectors_100k.ndjson';
     log(`Writing ${testVectors.length.toLocaleString()} test vectors to ${vectorsFile}...`);
     
     const writeStart = process.hrtime.bigint();
@@ -333,7 +333,7 @@ async function runBenchmark() {
     console.log('');
 
     // Also write summary JSON
-    const summaryFile = 'benchmark_results_100k_js.json';
+    const summaryFile = 'data/benchmark_results_100k_js.json';
     log(`Writing summary to ${summaryFile}...`);
     fs.writeFileSync(summaryFile, JSON.stringify({
         description: output.description,

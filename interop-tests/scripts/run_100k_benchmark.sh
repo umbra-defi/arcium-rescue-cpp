@@ -5,7 +5,8 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$SCRIPT_DIR"
+INTEROP_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+cd "$INTEROP_DIR"
 
 echo "========================================"
 echo "100k Rescue Cipher Benchmark Suite"
@@ -40,14 +41,14 @@ echo ""
 echo "========================================"
 echo "Running JavaScript benchmark (100k)..."
 echo "========================================"
-node benchmark_100k.js
+node js/benchmark_100k.js
 
 # Run C++ benchmark
 echo ""
 echo "========================================"
 echo "Running C++ benchmark (100k)..."
 echo "========================================"
-./build/benchmark_100k test_vectors_100k.ndjson
+./build/benchmark_100k data/test_vectors_100k.ndjson
 
 # Compare results
 echo ""
@@ -56,8 +57,8 @@ echo "Performance Comparison"
 echo "========================================"
 
 # Read results from JSON files
-JS_RESULTS=$(cat benchmark_results_100k_js.json)
-CPP_RESULTS=$(cat benchmark_results_100k_cpp.json)
+JS_RESULTS=$(cat data/benchmark_results_100k_js.json)
+CPP_RESULTS=$(cat data/benchmark_results_100k_cpp.json)
 
 # Extract metrics using node
 node -e "

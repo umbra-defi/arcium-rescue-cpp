@@ -59,10 +59,10 @@ function formatSpeedup(ratio) {
 function compareBenchmarks() {
     // Check for result files
     const cppResultsPath = path.join(__dirname, '..', 'build', 'benchmarks', 'benchmark_results_cpp.json');
-    const jsResultsPath = path.join(__dirname, 'benchmark_results_js.json');
+    const jsResultsPath = path.join(__dirname, '..', 'data', 'benchmark_results_js.json');
     
     // Alternative paths
-    const altCppPath = path.join(__dirname, 'benchmark_results_cpp.json');
+    const altCppPath = path.join(__dirname, '..', 'data', 'benchmark_results_cpp.json');
     
     let cppPath = fs.existsSync(cppResultsPath) ? cppResultsPath : altCppPath;
     
@@ -76,7 +76,7 @@ function compareBenchmarks() {
     if (!fs.existsSync(jsResultsPath)) {
         console.error(`${colors.red}Error: JavaScript benchmark results not found.${colors.reset}`);
         console.error(`Expected at: ${jsResultsPath}`);
-        console.error('Run the JavaScript benchmark first: node interop-tests/bench_rescue.js');
+        console.error('Run the JavaScript benchmark first: node js/bench_rescue.js');
         process.exit(1);
     }
     
@@ -240,9 +240,9 @@ function compareBenchmarks() {
         } : {}
     };
     
-    fs.writeFileSync('benchmark_comparison.json', JSON.stringify(comparisonOutput, null, 2));
+    fs.writeFileSync(path.join(__dirname, '..', 'data', 'benchmark_comparison.json'), JSON.stringify(comparisonOutput, null, 2));
     console.log();
-    console.log(`${colors.dim}Comparison results saved to benchmark_comparison.json${colors.reset}`);
+    console.log(`${colors.dim}Comparison results saved to data/benchmark_comparison.json${colors.reset}`);
 }
 
 // Run comparison

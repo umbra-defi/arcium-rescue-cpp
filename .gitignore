@@ -39,14 +39,10 @@ Thumbs.db
 # Interop tests
 interop-tests/node_modules/
 interop-tests/build/
-interop-tests/test_vectors_js.json
-interop-tests/test_vectors_cpp.json
 interop-tests/pnpm-lock.yaml
 
-# Benchmark outputs
-interop-tests/benchmark_results_*.json
-interop-tests/benchmark_comparison.json
-**/benchmark_results_*.json
+# Interop tests generated data
+interop-tests/data/
 
 # Test output
 Testing/

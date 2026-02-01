@@ -1,6 +1,6 @@
 #include <rescue/rescue_desc.hpp>
 
-#include <rescue/mds_precomputed.hpp>
+#include <rescue/detail/mds_precomputed.hpp>
 #include <rescue/utils.hpp>
 
 #include <cmath>

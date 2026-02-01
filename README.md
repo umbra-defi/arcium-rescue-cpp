@@ -24,7 +24,6 @@ Rescue is a SNARK-friendly symmetric cryptographic primitive designed for effici
 
 - **C++23** compatible compiler (GCC 13+, Clang 16+, MSVC 2022+)
 - **CMake** 3.25+
-- **GMP** (GNU Multiple Precision Arithmetic Library)
 - **OpenSSL** 3.0+ (for SHAKE256)
 - **GoogleTest** (optional, for tests)
 - **Google Benchmark** (optional, for benchmarks)
@@ -63,17 +62,17 @@ cmake .. \
 
 **Ubuntu/Debian:**
 ```bash
-sudo apt-get install libgmp-dev libssl-dev
+sudo apt-get install libssl-dev
 ```
 
 **macOS (Homebrew):**
 ```bash
-brew install gmp openssl@3
+brew install openssl@3
 ```
 
 **Arch Linux:**
 ```bash
-sudo pacman -S gmp openssl
+sudo pacman -S openssl
 ```
 
 ## Usage
@@ -159,8 +158,8 @@ int main() {
 ┌─────────────────────────────────────────────────────────────┐
 │                   Low-Level Primitives                      │
 ├─────────────────────────────────────────────────────────────┤
-│  ConstantTime Ops      │  GMP BigInt  │  SHAKE256           │
-│  - ct::add()           │  mpz_class   │  (OpenSSL)          │
+│  ConstantTime Ops      │  uint256     │  SHAKE256           │
+│  - ct::add()           │  (BigInt)    │  (OpenSSL)          │
 │  - ct::sub()           │              │                     │
 │  - ct::select()        │              │                     │
 └─────────────────────────────────────────────────────────────┘

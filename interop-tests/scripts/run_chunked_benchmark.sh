@@ -18,15 +18,16 @@ TOTAL_TESTS=100000
 NUM_CHUNKS=$((TOTAL_TESTS / CHUNK_SIZE))
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$SCRIPT_DIR"
+INTEROP_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+cd "$INTEROP_DIR"
 
-# Temp files
-CHUNK_FILE="chunk_data.json"
-JS_STATS="chunk_data.json.stats.json"
-CPP_STATS="chunk_cpp_stats.json"
+# Temp files (in data directory)
+CHUNK_FILE="data/chunk_data.json"
+JS_STATS="data/chunk_data.json.stats.json"
+CPP_STATS="data/chunk_cpp_stats.json"
 
 # Accumulator files
-RESULTS_FILE="chunked_benchmark_results.json"
+RESULTS_FILE="data/chunked_benchmark_results.json"
 
 # Colors for output
 RED='\033[0;31m'
@@ -76,7 +77,7 @@ check_dependencies() {
     fi
     log "${GREEN}✓ JS dependencies OK${NC}"
     
-    if [ ! -f "build/chunk_benchmark_cpp" ]; then
+    if [ ! -f "$INTEROP_DIR/build/chunk_benchmark_cpp" ]; then
         log "Building C++ benchmark..."
         mkdir -p build
         cd build
@@ -124,7 +125,7 @@ run_chunk() {
     # Run JavaScript
     log ""
     log "${YELLOW}>>> Running JavaScript...${NC}"
-    if ! node chunk_benchmark_js.js "$chunk_idx" "$CHUNK_SIZE" "$CHUNK_FILE"; then
+    if ! node js/chunk_benchmark_js.js "$chunk_idx" "$CHUNK_SIZE" "$CHUNK_FILE"; then
         log "${RED}ERROR: JavaScript benchmark failed!${NC}"
         exit 1
     fi
